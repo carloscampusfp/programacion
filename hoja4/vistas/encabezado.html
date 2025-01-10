@@ -13,10 +13,20 @@
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
+        <div class="collapse navbar-collapse " id="navbarNav">
             <ul class="navbar-nav">
                 <li class="nav-item">
-                    <a class="nav-link" href="?opcion=clientes">Clientes</a>
+                    <div class="dropdown-submenu">
+                        <button class=" nav-link dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Cliente
+                          </button>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="#">Añadir</a>
+                            <a class="dropdown-item" href="#">Modificar</a>
+                            <a class="dropdown-item" href="#">Eliminar</a>
+                        </div>
+                    </div>
+                    
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="?opcion=articulos">Artículos</a>
@@ -29,3 +39,7 @@
     </div>
 </nav>
 <div class="container mt-4">
+    
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.5/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>

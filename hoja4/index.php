@@ -21,3 +21,4 @@ if ($opcion === "clientes") {
 
 // Renderizar la página
 echo $encabezado . $contenido . $pie;
+
