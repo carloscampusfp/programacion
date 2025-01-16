@@ -28,12 +28,12 @@ class Personaje{
         $this->puntosAtaque += 20;
     }
     
-    public function partida(){
+    public function partida($jugador2){
         
         $rondas = readline("Cuantas rondas quieres jugar: ");
         for($i = 0 ; $i <= $rondas * 2 ; $i++){
             echo "Es el turno de $this->nombre";
-            $jugada = readline("1: subir nivel | 2: atacar | 3: curarse 50    ");
+            $jugada = readline(" 1: subir nivel | 2: atacar | 3: curarse 50    ");
             switch($jugada){
                 case 1:
                     $this->subirNivel();
@@ -46,7 +46,7 @@ class Personaje{
                     break;
                 }
             echo "Es el turno de $jugador2->nombre";
-            $jugada = readline("1: subir nivel | 2: atacar | 3: curarse 50   ");
+            $jugada = readline(" 1: subir nivel | 2: atacar | 3: curarse 50   ");
             switch($jugada){
                 case 1:
                     $jugador2->subirNivel();
@@ -80,4 +80,4 @@ $jugador2 = 0;
 $nombre2 = readline("Inserte nombre del jugador 2: ");
 $jugador2 = new Personaje($nombre2, 1, 100, 50);
 
-$jugador1->partida();
+$jugador1->partida($jugador2);
