@@ -1,97 +1,199 @@
 package paquete;
 
-// Importamos librerías necesarias para JDBC, listas y entrada por consola
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 
 public class Principal {
 
     public static void main(String[] args) {
-        
-        try {
-            // Cargamos el driver JDBC de MySQL para habilitar la conexión
-            Class.forName("com.mysql.cj.jdbc.Driver");
-        } catch (ClassNotFoundException e) {
-            // Si no se encuentra el driver, mostramos error y salimos del programa
-            System.err.println("ERROR: No se encontró el driver JDBC de MySQL. Asegúrate de tener el .jar en el classpath.");
-            e.printStackTrace();
-            return;
-        }
-
-        // Creamos objeto Scanner para leer datos del usuario por consola
         Scanner sc = new Scanner(System.in);
         int opcion;
+        
+        //mostramos el menu al menos vez
         do {
-            // Mostramos el menú principal
-            System.out.println("\n--- MENÚ ---");
-            System.out.println("1 - Ver películas");
-            System.out.println("2 - Salir");
-            System.out.print("Selecciona una opción: ");
-            opcion = sc.nextInt(); // Leemos la opción ingresada
+            System.out.println("\n--- MENU ---");
+            System.out.println("1 - Ver peliculas");
+            System.out.println("2 - Agregar pelicula");
+            System.out.println("3 - Actualizar pelicula");
+            System.out.println("4 - Eliminar pelicula");
+            System.out.println("5 - Salir");
+            System.out.print("Selecciona una opcion: ");
+            opcion = sc.nextInt();
+            sc.nextLine(); // Limpia buffer
 
-            // Según la opción seleccionada, ejecutamos una acción
+            //en funcion de lo que escriba el usuario esjecutará unas u otras acciones
             switch (opcion) {
-                case 1:
-                    verPeliculas(); // Llamamos al método que muestra las películas
-                    break;
-                case 2:
-                    System.out.println("Saliendo del programa..."); 
-                    break;
-                default:
-                    System.out.println("Opción no válida."); 
+                case 1 -> verPeliculas();
+                case 2 -> agregarPelicula(sc);
+                case 3 -> actualizarPelicula(sc);
+                case 4 -> eliminarPelicula(sc);
+                case 5 -> System.out.println("Saliendo del programa...");
+                default -> System.out.println("Opcion no valida.");
             }
-        } while (opcion != 2); // Repetimos hasta que se seleccione salir
+        } while (opcion != 5);
 
-        sc.close(); // Cerramos el Scanner al finalizar
+        sc.close();
     }
 
+    
     public static void verPeliculas() {
-        // URL de conexión a la base de datos, nombre de usuario y contraseña
-        String url = "jdbc:mysql://localhost:3306/cine_Carlos_Horcajada_Moyano";
-        String usuario = "root";
-        String contraseña = "";
+        String sql = """
+            SELECT p.id_pelicula, p.titulo, p.director, p.duracion, p.anio, g.nombre_genero
+            FROM peliculas p
+            JOIN generos g ON p.id_genero = g.id_genero
+            """;
 
-        // Consulta SQL que une las tablas 'peliculas' y 'generos'
-        String sql = ""
-            + "SELECT p.id_pelicula, p.titulo, p.director, p.duracion, p.año, g.nombre_genero "
-            + "FROM peliculas p "
-            + "JOIN generos g ON p.id_genero = g.id_genero";
-
-        // Establecemos conexión, preparamos y ejecutamos la consulta
-        try (Connection conn = DriverManager.getConnection(url, usuario, contraseña);
+        try (Connection conn = conexion.conectar();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
 
-            // Encabezados para mostrar los resultados en formato tabla
-            System.out.println("ID | Título               | Director            | Duración | Año  | Género");
-            System.out.println("----------------------------------------------------------------------------");
+            System.out.println("ID | Titulo              | Director           | Duracion | Año | Genero");
+            System.out.println("------------------------------------------------------------------------");
 
-            // Recorremos cada fila del resultado
             while (rs.next()) {
-                int    id       = rs.getInt("id_pelicula"); 
-                String titulo   = rs.getString("titulo");     
-                String director = rs.getString("director");      
-                int    duracion = rs.getInt("duracion");          
-                int    año      = rs.getInt("año");                
-                String genero   = rs.getString("nombre_genero");   
+                int id = rs.getInt("id_pelicula");
+                String titulo = rs.getString("titulo");
+                String director = rs.getString("director");
+                int duracion = rs.getInt("duracion");
+                int anio = rs.getInt("anio");
+                String genero = rs.getString("nombre_genero");
 
-                // Mostramos los datos en consola de forma formateada
-                System.out.println(
-                    id + " | " +
-                    titulo + " | " +
-                    director + " | " +
-                    duracion + " min | " +
-                    año + " | " +
-                    genero
-                );
+                // Crear un objeto Pelicula y usar el método mostrar
+                Pelicula pelicula = new Pelicula(id, titulo, director, duracion, anio, genero);
+                pelicula.mostrar();
             }
 
         } catch (SQLException e) {
-            // Mostramos error si hay problemas de conexión o SQL
-            System.err.println("Error al consultar películas: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("Error al consultar peliculas: " + e.getMessage());
+        }
+    }
+
+    public static void agregarPelicula(Scanner sc) {
+        System.out.print("Titulo: ");
+        String titulo = sc.nextLine();
+        System.out.print("Director: ");
+        String director = sc.nextLine();
+        System.out.print("Duracion (min): ");
+        int duracion = sc.nextInt();
+        System.out.print("Año: ");
+        int anio = sc.nextInt();
+        System.out.print("ID del genero: ");
+        int idGenero = sc.nextInt();
+
+        String sql = "INSERT INTO peliculas (titulo, director, duracion, anio, id_genero) VALUES (?, ?, ?, ?, ?)";
+        
+        //dentro del try nos intentaremos conectar, si no lo consigue pasará al catch
+        try (Connection conn = conexion.conectar();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        	
+        	// Desactivamos autoCommit para gestionar la transacción manualmente
+        	 conn.setAutoCommit(false);
+        	
+        	//configuramos los parametros de la consulta que vamos a hacer
+            stmt.setString(1, titulo);
+            stmt.setString(2, director);
+            stmt.setInt(3, duracion);
+            stmt.setInt(4, anio);
+            stmt.setInt(5, idGenero);
+            stmt.executeUpdate();
+            System.out.println("Pelicula agregada correctamente.");
+            
+            conn.commit();
+
+        } catch (SQLException e) {
+            System.err.println("Error al agregar pelicula: " + e.getMessage());
+            
+        }
+    }
+
+    public static void actualizarPelicula(Scanner sc) {
+        System.out.print("ID de la pelicula a actualizar: ");
+        int id = sc.nextInt();
+        sc.nextLine();
+        System.out.print("Nuevo titulo: ");
+        String titulo = sc.nextLine();
+        System.out.print("Nuevo director: ");
+        String director = sc.nextLine();
+        System.out.print("Nueva duracion (min): ");
+        int duracion = sc.nextInt();
+        System.out.print("Nuevo año: ");
+        int anio = sc.nextInt();
+        System.out.print("Nuevo ID del genero: ");
+        int idGenero = sc.nextInt();
+
+        String sql = """
+            UPDATE peliculas SET titulo=?, director=?, duracion=?, anio=?, id_genero=?
+            WHERE id_pelicula=?
+            """;
+
+        try (Connection conn = conexion.conectar()) {
+            // Desactivamos autoCommit para manejar la transacción manualmente
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                // Configuramos los parámetros para la consulta
+                stmt.setString(1, titulo);
+                stmt.setString(2, director);
+                stmt.setInt(3, duracion);
+                stmt.setInt(4, anio);
+                stmt.setInt(5, idGenero);
+                stmt.setInt(6, id);
+
+                // Ejecutamos la actualización
+                int filas = stmt.executeUpdate();
+
+                if (filas > 0) {
+                    // Confirmamos la transacción si la actualización afectó filas
+                    conn.commit();
+                    System.out.println("Pelicula actualizada correctamente.");
+                } else {
+                    // Si no se actualizó nada, revertimos la transacción
+                    conn.rollback();
+                    System.out.println("No se encontró una pelicula con ese ID.");
+                }
+            } catch (SQLException e) {
+                // Si ocurre una excepción, revertimos los cambios
+                conn.rollback();
+                System.err.println("Error al actualizar pelicula: " + e.getMessage());
+            }
+        } catch (SQLException e) {
+            System.err.println("Error de conexión a la base de datos: " + e.getMessage());
+        } finally {
+            try {
+                // Aseguramos que autoCommit se restaure a true después de cada transacción
+                Connection conn = conexion.conectar();
+                if (conn != null) {
+                    conn.setAutoCommit(true);
+                }
+            } catch (SQLException e) {
+                System.err.println("Error al restaurar autoCommit: " + e.getMessage());
+            }
+        }
+    }
+
+
+    public static void eliminarPelicula(Scanner sc) {
+        System.out.print("ID de la pelicula a eliminar: ");
+        int id = sc.nextInt();
+
+        String sql = "DELETE FROM peliculas WHERE id_pelicula=?";
+
+        try (Connection conn = conexion.conectar();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+        	 conn.setAutoCommit(false);
+        	
+            stmt.setInt(1, id);
+            int filas = stmt.executeUpdate();
+            if (filas > 0)
+                System.out.println("Pelicula eliminada correctamente.");
+            else {
+            	//controlamos que si no existe diga que no la encu
+                System.out.println("No se encontró una pelicula con ese ID.");
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error al eliminar pelicula: " + e.getMessage());
         }
     }
 }
